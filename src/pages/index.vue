@@ -6,7 +6,7 @@
         <div class="hLeft">
           <img src="@/assets/images/logo.png" alt />
           <img src="@/assets/images/line.png" alt />
-          <span class="h_title">动产质押监控大数据平台</span>
+          <span class="h_title">动产质押监控平台</span>
         </div>
         <div class="hRight">
           <span>{{currentTime}}</span>
@@ -70,9 +70,8 @@ export default {
       currentTime: "", //获取当前时间
       websocket: null, //我们的连接
       lockReconnect: false, //心跳检测，是否真正连接
-      timeout: 60 * 1000, //一分钟一次  单位：ms
+      timeout: 50 * 1000, //一分钟一次  单位：ms
       timeoutObj: null, //心跳倒计时
-      serverTimeoutObj: null, //倒计时
       timeoutnum: null, //断开重连倒计时
       xList: [], //得到msg反馈，给折线图数据x轴
       yList: [], //得到msg反馈，给折线图数据y轴
@@ -109,6 +108,8 @@ export default {
       this.websocket.onerror = this.setOnerrorError;
       //关闭
       this.websocket.onclose = this.setOncloseClose;
+      //开启心跳
+      this.start();
     },
     setOnmessageMessage(e) {
       //接收推送消息后实时刷新次数与告警详情
@@ -120,15 +121,13 @@ export default {
         duration: 5000,
         center: false
       });
-      //心跳重置
-      this.reset();
     },
-    setOnopenOpen() {
-      //开启socket
+    setOnopenOpen() {//开启socket
       //开启心跳
       this.start();
       //在开启连接时会发送消息过去
     },
+    
     setOnsendSend(Data) {
       //发给服务器
       if (Data == null) {
@@ -137,6 +136,7 @@ export default {
         this.websocket.send(Data);
       }
     },
+    
     setOnerrorError(e) {
       //socket发生错误
       //重连
@@ -153,36 +153,24 @@ export default {
       if (that.lockReconnect) {
         return;
       }
+      //设置重连为true
       that.lockReconnect = true;
       //没连接上会一直重连，设置延迟避免请求过多
-      that.timeoutnum && clearTimeout(that.timeoutnum);
-      that.timeoutnum = setTimeout(function() {
-        //新连接
+      that.timeoutnum && clearInterval(that.timeoutnum);
+      that.timeoutnum = setInterval(function() {//新连接
         that.initWebSocket();
-        that.lockReconnect = false;
+        that.lockReconnect = false;//连接失败
       }, 5000);
-    },
-    reset() {
-      //重置心跳
-      var that = this;
-      //清除时间
-      clearInterval(that.timeoutObj);
-      clearInterval(that.serverTimeoutObj);
-      //重启心跳
-      that.start();
     },
     start() {
       //开启心跳
       var self = this;
       self.timeoutObj && clearInterval(self.timeoutObj);
-      self.serverTimeoutObj && clearInterval(self.serverTimeoutObj);
       self.timeoutObj = setInterval(function() {
         //这里发送一个心跳，后端收到后，返回一个心跳消息，
-        if (self.websocket.readyState == 1) {
-          //如果连接正常
-          self.websocket.send("heartCheck");
-        } else {
-          //否则重连
+        if (self.websocket.readyState == 1) {//如果连接正常
+          self.setOnsendSend('heartCheck');
+        } else {//否则重连
           self.reconnect();
         }
       }, self.timeout);
@@ -191,7 +179,7 @@ export default {
   beforeDestroy() {
     //销毁心跳
     clearInterval(self.timeoutObj);
-    clearInterval(self.serverTimeoutObj);
+    clearInterval(self.timeoutnum);
     //销毁定时器
     clearInterval(this.timer);
     //销毁websocket

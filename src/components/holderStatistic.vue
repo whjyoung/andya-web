@@ -5,7 +5,8 @@
       <div class="line"></div>
       <div class="holder_title">质押权人统计</div>
     </div>
-    <div id="myChart" :style="{width: '100%', height: '300px', top:'-10%'}"></div>
+    
+    <div id="myChart" :style="{width: '100%', height: '90%', top:'-10%'}"></div>
   </div>
 </template>
 <script>
@@ -34,6 +35,12 @@ export default {
         this.legendData.push(data[i].name);
       }
       this.initData(); //渲染饼图
+      
+      //监听窗口变化
+        window.addEventListener('resize',function(){
+   			console.log(echarts);
+        echarts.init(document.getElementById('myChart')).resize();
+      });
     })
     .catch(err => {
       this.$message.error(err);
@@ -93,8 +100,8 @@ export default {
 <style lang="less" scoped>
 @import "~@/styles/base.less";
 .holder {
-  margin-top: 24px;
-  height: 326px;
+  margin-top: 5%;
+  height: 35%;
   background: #2d323b;
   .holder_top{
     .flex-row('',flex-end);

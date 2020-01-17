@@ -5,7 +5,7 @@
       <div class="line"></div>
       <div class="c_title">告警事件次数统计</div>
     </div>
-    <div id="myCount" :style="{width: '100%', height: '246px', top: '-10%'}"></div>
+    <div id="myCount" :style="{width: '100%', height: '100%', top: '-10%'}"></div>
   </div>
 </template>
 <script>
@@ -58,6 +58,12 @@ export default {
           this.alarmData.push(result[i].value); //次数
         }
         this.initData(); //渲染折线图数据
+        //监听窗口变化
+        window.addEventListener('resize',function(){
+   			console.log(echarts);
+        echarts.init(document.getElementById('myCount')).resize();
+      });
+      
       })
       .catch(err => {
         this.$message.error(err);
@@ -145,8 +151,8 @@ export default {
 <style lang="less" scoped>
 @import "~@/styles/base.less";
 .count {
-  height: 246px;
-  margin-top: 26px;
+  height: 26.5%;
+  margin-top: 2.55%;
   background: #2d323b;
   .count_title{
     .flex-row('',flex-end);
